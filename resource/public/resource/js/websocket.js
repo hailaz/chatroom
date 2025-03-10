@@ -1,3 +1,5 @@
+import { MessageType } from './constants.js';
+
 class ChatWebSocket {
     constructor() {
         this.ws = null;
@@ -105,7 +107,7 @@ class ChatWebSocket {
 
     sendTextMessage(content) {
         this.send({
-            type: 0,
+            type: MessageType.TEXT,
             content,
             roomId: this.currentRoom
         });
@@ -113,7 +115,7 @@ class ChatWebSocket {
 
     sendImageMessage(base64Data) {
         this.send({
-            type: 1,
+            type: MessageType.IMAGE,
             content: base64Data,
             roomId: this.currentRoom
         });
@@ -121,7 +123,7 @@ class ChatWebSocket {
 
     sendFileMessage(fileInfo) {
         this.send({
-            type: 2,
+            type: MessageType.FILE,
             content: JSON.stringify(fileInfo),
             roomId: this.currentRoom
         });

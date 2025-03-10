@@ -1,3 +1,5 @@
+import { Errors } from './constants.js';
+
 class Api {
     static getToken() {
         return localStorage.getItem('token');
@@ -40,6 +42,10 @@ class Api {
             return data.data;
         } catch (error) {
             console.error('API请求错误:', error);
+            if (error.message === Errors.NOT_IN_ROOM) {
+                // 特殊处理未加入房间的错误
+                throw new Error('您还未加入该聊天室');
+            }
             throw error;
         }
     }
@@ -82,3 +88,4 @@ class Api {
 
 // 导出API类
 window.Api = Api;
+export default Api;

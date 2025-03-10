@@ -271,16 +271,6 @@ func (c *Connection) readPump() {
 	defer func() {
 		c.manager.removeConnection(c)
 		c.conn.Close()
-		// Notify other users that user left
-		c.manager.broadcastToRoom(c.roomId, WebSocketMessage{
-			Type:      consts.WsMsgTypeLeave,
-			Content:   fmt.Sprintf("%s left the room", c.user.Nickname),
-			Timestamp: time.Now().Format(time.RFC3339),
-			UserId:    c.user.Id,
-			Username:  c.user.Username,
-			Nickname:  c.user.Nickname,
-			Avatar:    c.user.Avatar,
-		})
 	}()
 
 	c.conn.SetReadLimit(1024 * 1024) // 1MB

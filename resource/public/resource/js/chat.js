@@ -1,3 +1,5 @@
+import { MessageType, WsMessageType } from './constants.js';
+
 class Chat {
     constructor() {
         this.currentUser = null;
@@ -61,11 +63,11 @@ class Chat {
 
     setupWebSocketHandlers() {
         // 处理不同类型的消息
-        this.ws.on(0, (message) => this.ui.appendMessage(message)); // 文本消息
-        this.ws.on(1, (message) => this.ui.appendMessage(message)); // 图片消息
-        this.ws.on(2, (message) => this.ui.appendMessage(message)); // 文件消息
-        this.ws.on(3, (message) => this.ui.appendMessage(message)); // 系统消息
-        this.ws.on(4, (message) => {                                // 用户列表更新
+        this.ws.on(MessageType.TEXT, (message) => this.ui.appendMessage(message));
+        this.ws.on(MessageType.IMAGE, (message) => this.ui.appendMessage(message));
+        this.ws.on(MessageType.FILE, (message) => this.ui.appendMessage(message));
+        this.ws.on(MessageType.SYSTEM, (message) => this.ui.appendMessage(message));
+        this.ws.on(WsMessageType.USER_LIST, (message) => {
             this.ui.updateUserList(message.data);
             this.loadRoomList(); // 刷新聊天室列表以更新在线人数
         });

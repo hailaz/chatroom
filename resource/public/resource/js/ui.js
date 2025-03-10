@@ -1,3 +1,5 @@
+import { Defaults, MessageType, UserStatus } from './constants.js';
+
 class ChatUI {
     constructor() {
         this.messageList = document.getElementById('messageList');
@@ -17,16 +19,16 @@ class ChatUI {
         let content = '';
 
         switch (message.type) {
-            case 0: // 文本消息
+            case MessageType.TEXT:
                 content = `<div class="content">${this.escapeHtml(message.content)}</div>`;
                 break;
-            case 1: // 图片消息
+            case MessageType.IMAGE:
                 content = `
                     <div class="content p-0">
                         <img src="${message.content}" class="image-content" onclick="chatUI.showImagePreview('${message.content}')">
                     </div>`;
                 break;
-            case 2: // 文件消息
+            case MessageType.FILE:
                 const fileInfo = JSON.parse(message.content);
                 content = `
                     <div class="content file-content" onclick="chatUI.downloadFile('${fileInfo.data}', '${fileInfo.name}')">
@@ -35,17 +37,17 @@ class ChatUI {
                         <small class="text-muted">${this.formatFileSize(fileInfo.size)}</small>
                     </div>`;
                 break;
-            case 3: // 系统消息
+            case MessageType.SYSTEM:
                 div.className = 'message text-center text-muted small py-2';
                 content = message.content;
                 break;
         }
         
-        if (message.type === 3) {
+        if (message.type === MessageType.SYSTEM) {
             div.innerHTML = content;
         } else {
             div.innerHTML = `
-                <img src="${message.avatar || '/resource/image/avatar/default.png'}" class="avatar me-2">
+                <img src="${message.avatar || Defaults.AVATAR}" class="avatar me-2">
                 <div>
                     <div class="small text-muted mb-1">${message.nickname || message.username} - ${timestamp}</div>
                     ${content}
@@ -67,12 +69,12 @@ class ChatUI {
             const div = document.createElement('div');
             div.className = 'user-item d-flex align-items-center';
             div.innerHTML = `
-                <img src="${user.avatar || '/resource/image/avatar/default.png'}" class="avatar me-2">
+                <img src="${user.avatar || Defaults.AVATAR}" class="avatar me-2">
                 <div>
                     <div>${user.nickname}</div>
                     <small class="text-muted">${user.username}</small>
                 </div>
-                <i class="fas fa-circle status ms-auto ${user.status === 1 ? 'text-success' : 'text-secondary'}"></i>
+                <i class="fas fa-circle status ms-auto ${user.status === UserStatus.ONLINE ? 'text-success' : 'text-secondary'}"></i>
             `;
             this.userList.appendChild(div);
         });
