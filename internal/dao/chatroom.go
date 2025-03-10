@@ -31,7 +31,12 @@ func (dao *ChatRoomDao) GetByID(ctx context.Context, id uint) (*entity.ChatRoom,
 
 // Create creates a new chat room
 func (dao *ChatRoomDao) Create(ctx context.Context, chatRoom *entity.ChatRoom) (uint, error) {
-	result, err := Model(ctx, ChatRoomTable).Data(chatRoom).Insert()
+	result, err := Model(ctx, ChatRoomTable).Data(g.Map{
+		"name":        chatRoom.Name,
+		"description": chatRoom.Description,
+		"creator_id":  chatRoom.CreatorId,
+		"is_private":  chatRoom.IsPrivate,
+	}).Insert()
 	if err != nil {
 		return 0, err
 	}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/crypto/gmd5"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -37,24 +38,22 @@ func (dao *UserDao) GetByUsername(ctx context.Context, username string) (*entity
 // Create creates a new user
 func (dao *UserDao) Create(ctx context.Context, user *entity.User) (uint, error) {
 	if user.Password == "" {
-		// Set a default password for admin if none provided
-		if user.Username == "admin" {
-			pwd, err := gmd5.EncryptString("admin123")
-			if err != nil {
-				return 0, err
-			}
-			user.Password = pwd
-		}
-	} else {
-		// Hash the password before storing
-		pwd, err := gmd5.EncryptString(user.Password)
-		if err != nil {
-			return 0, err
-		}
-		user.Password = pwd
+		return 0, gerror.New("Password is required")
 	}
+	// Hash the password before storing
+	pwd, err := gmd5.EncryptString(user.Password)
+	if err != nil {
+		return 0, err
+	}
+	user.Password = pwd
 
-	result, err := Model(ctx, UserTable).Data(user).Insert()
+	result, err := Model(ctx, UserTable).Data(g.Map{
+		"username": user.Username,
+		"password": user.Password,
+		"nickname": user.Nickname,
+		"avatar":   user.Avatar,
+		"status":   user.Status,
+	}).Insert()
 	if err != nil {
 		return 0, err
 	}

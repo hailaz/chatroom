@@ -47,3 +47,9 @@ func (c *Controller) Leave(ctx context.Context, req *chatroom.LeaveReq) (res *ch
 	ctxUser := ctx.Value(consts.ContextKeyUser).(*entity.User)
 	return c.roomService.Leave(ctx, ctxUser.Id, req)
 }
+
+// Delete handles chat room deletion
+func (c *Controller) Delete(ctx context.Context, req *chatroom.DeleteReq) (res *chatroom.DeleteRes, err error) {
+	ctxUser := ctx.Value(consts.ContextKeyUser).(*entity.User)
+	return c.roomService.Delete(ctx, ctxUser.Id, req)
+}

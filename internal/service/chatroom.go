@@ -159,3 +159,30 @@ func (s *ChatRoomService) Leave(ctx context.Context, userId uint, req *chatroom.
 
 	return &chatroom.LeaveRes{Success: true}, nil
 }
+
+// Delete deletes a chat room if the user is the creator
+func (s *ChatRoomService) Delete(ctx context.Context, userId uint, req *chatroom.DeleteReq) (*chatroom.DeleteRes, error) {
+	// Check if room exists and user is the creator
+	room, err := s.roomDao.GetByID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	if room == nil {
+		return nil, gerror.New("Chat room not found")
+	}
+	if room.CreatorId != userId {
+		return nil, gerror.New("Only the room creator can delete the room")
+	}
+
+	// Delete the room and all associated data
+	messageDao := dao.NewMessageDao()
+	if err := messageDao.DeleteRoomMessages(ctx, req.Id); err != nil {
+		return nil, err
+	}
+
+	if err := s.roomDao.Delete(ctx, req.Id); err != nil {
+		return nil, err
+	}
+
+	return &chatroom.DeleteRes{Success: true}, nil
+}

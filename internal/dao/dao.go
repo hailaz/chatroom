@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"goframechat/internal/model/entity"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -79,6 +80,28 @@ func InitDatabase(ctx context.Context) error {
 	if err != nil {
 		glog.Error(ctx, "Create room_users table failed:", err)
 		return err
+	}
+
+	// Create default admin user if not exists
+	res, err := g.DB().GetValue(ctx, "SELECT COUNT(*) FROM users WHERE username = ?", "admin")
+	if err != nil {
+		glog.Error(ctx, "Check admin user failed:", err)
+		return err
+	}
+
+	if res.Int() == 0 {
+		userDao := NewUserDao()
+		adminUser := &entity.User{
+			Username: "admin",
+			Nickname: "管理员",
+			Password: "admin123",
+		}
+		_, err = userDao.Create(ctx, adminUser)
+		if err != nil {
+			glog.Error(ctx, "Create admin user failed:", err)
+			return err
+		}
+		glog.Info(ctx, "Created default admin user with password: admin123")
 	}
 
 	return nil

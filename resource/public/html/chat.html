@@ -247,6 +247,7 @@
                         div.className = 'list-group-item room-item';
                         div.onclick = () => joinRoom(room.id);
                         div.innerHTML = `
+                            ${showRoomActions(room)}
                             <h6 class="mb-1">${room.name}</h6>
                             <p class="mb-1 small text-muted">${room.description || '无描述'}</p>
                             <small>${room.userCount}人在线</small>
@@ -327,7 +328,8 @@
         // 连接WebSocket
         function connectWebSocket(roomId) {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws/chat?roomId=${roomId}`;
+            const token = localStorage.getItem('token');
+            const wsUrl = `${protocol}//${window.location.host}/ws/chat?roomId=${roomId}&token=${token}`;
             
             ws = new WebSocket(wsUrl);
             
@@ -344,7 +346,72 @@
             };
 
             ws.onerror = function(error) {
-                console.error('WebSocket错误:', error);
+                let errorDesc = '';
+                switch (ws.readyState) {
+                    case WebSocket.CONNECTING: // 0
+                        errorDesc = '正在连接中...';
+                        break;
+                    case WebSocket.OPEN: // 1
+                        errorDesc = '连接已建立';
+                        break;
+                    case WebSocket.CLOSING: // 2
+                        errorDesc = '连接正在关闭';
+                        break;
+                    case WebSocket.CLOSED: // 3
+                        errorDesc = '连接已关闭或无法建立连接';
+                        break;
+                }
+
+                // 输出详细的错误信息
+                console.error('WebSocket错误详情:', {
+                    error: error,
+                    readyState: ws.readyState,
+                    stateDesc: errorDesc,
+                    bufferedAmount: ws.bufferedAmount,
+                    url: ws.url
+                });
+                
+                // 显示用户友好的错误提示
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'alert alert-danger';
+                errorMessage.innerHTML = `
+                    <strong>连接错误</strong><br>
+                    ${errorDesc}<br>
+                    <small>请检查：</small><br>
+                    <small>1. 网络连接是否正常</small><br>
+                    <small>2. 服务器是否在运行</small><br>
+                    <small>3. WebSocket URL是否正确</small><br>
+                    <small>错误代码: ${ws.readyState}</small>
+                `;
+                
+                const messageList = document.getElementById('messageList');
+                messageList.insertBefore(errorMessage, messageList.firstChild);
+                
+                // 重连逻辑
+                if (ws.readyState === WebSocket.CLOSED) {
+                    let retryCount = 0;
+                    const maxRetries = 5;
+                    const retryInterval = 3000; // 3秒
+
+                    const tryReconnect = () => {
+                        if (retryCount >= maxRetries) {
+                            const finalError = document.createElement('div');
+                            finalError.className = 'alert alert-warning';
+                            finalError.textContent = '多次重连失败，请刷新页面重试';
+                            messageList.insertBefore(finalError, messageList.firstChild);
+                            return;
+                        }
+
+                        if (currentRoom && ws.readyState === WebSocket.CLOSED) {
+                            console.log(`尝试重新连接WebSocket... (${retryCount + 1}/${maxRetries})`);
+                            connectWebSocket(currentRoom);
+                            retryCount++;
+                            setTimeout(tryReconnect, retryInterval);
+                        }
+                    };
+
+                    setTimeout(tryReconnect, retryInterval);
+                }
             };
         }
 
@@ -577,6 +644,57 @@
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/html/login.html';
+        }
+
+        function showRoomActions(room) {
+            if (room.creatorId === currentUser.id) {
+                return `
+                    <div class="dropdown float-end">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteRoom(${room.id})">
+                                <i class="fas fa-trash"></i> 删除聊天室
+                            </a></li>
+                        </ul>
+                    </div>`;
+            }
+            return '';
+        }
+
+        async function deleteRoom(roomId) {
+            if (!confirm('确定要删除这个聊天室吗？所有聊天记录将被永久删除。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/chatroom/delete/${roomId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.code === 0) {
+                    // If currently in the deleted room, clear the chat area
+                    if (currentRoom === roomId) {
+                        document.getElementById('messageList').innerHTML = '';
+                        document.getElementById('userList').innerHTML = `
+                            <div class="p-3 bg-light border-bottom">
+                                <h6 class="mb-0">在线用户</h6>
+                            </div>`;
+                        currentRoom = null;
+                    }
+                    // Reload room list
+                    await loadRoomList();
+                } else {
+                    alert(data.message || '删除聊天室失败');
+                }
+            } catch (err) {
+                alert('删除聊天室失败: ' + err.message);
+            }
         }
 
         // 初始化页面

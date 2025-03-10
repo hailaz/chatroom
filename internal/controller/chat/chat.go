@@ -4,6 +4,7 @@ import (
 	"context"
 	"goframechat/api/chat"
 	"goframechat/internal/consts"
+	"goframechat/internal/dao"
 	"goframechat/internal/model/entity"
 	"goframechat/internal/service"
 
@@ -35,11 +36,40 @@ func (c *Controller) Connect(r *ghttp.Request) {
 		return
 	}
 
-	// Get user from context (set by auth middleware)
-	ctxUser := r.Context().Value(consts.ContextKeyUser).(*entity.User)
+	// Get token from URL parameter
+	token := r.Get("token").String()
+	if token == "" {
+		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
+			Code:    1,
+			Message: "Missing token",
+		})
+		return
+	}
+
+	// Parse token
+	jwtService := service.NewJwtService()
+	claims, err := jwtService.ParseToken(token)
+	if err != nil {
+		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
+			Code:    1,
+			Message: "Invalid token: " + err.Error(),
+		})
+		return
+	}
+
+	// Get user
+	userDao := dao.NewUserDao()
+	user, err := userDao.GetByID(r.Context(), claims.UserId)
+	if err != nil || user == nil {
+		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
+			Code:    1,
+			Message: "User not found",
+		})
+		return
+	}
 
 	// Handle WebSocket connection
-	c.wsManager.HandleWebSocket(r, ctxUser, req.RoomId)
+	c.wsManager.HandleWebSocket(r, user, req.RoomId)
 }
 
 // GetHistory returns chat message history

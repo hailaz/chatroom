@@ -83,3 +83,14 @@ type LeaveReq struct {
 type LeaveRes struct {
 	Success bool `json:"success" dc:"Whether the operation was successful"`
 }
+
+// DeleteReq is the request for deleting a chat room
+type DeleteReq struct {
+	g.Meta `path:"/chatroom/delete/{id}" method:"post" tags:"ChatRoom" summary:"Delete a chat room" auth:"true"`
+	Id     uint `v:"required|min:1" dc:"Room ID"`
+}
+
+// DeleteRes is the response for deleting a chat room
+type DeleteRes struct {
+	Success bool `json:"success" dc:"Whether the operation was successful"`
+}

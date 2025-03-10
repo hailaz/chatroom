@@ -29,6 +29,10 @@ var (
 			// Global middleware
 			s.Use(ghttp.MiddlewareHandlerResponse)
 
+			s.BindHandler("/", func(r *ghttp.Request) {
+				r.Response.RedirectTo("/index.html")
+			})
+
 			// Register controllers
 			s.Group("/", func(group *ghttp.RouterGroup) {
 				// Public routes
@@ -68,9 +72,8 @@ var (
 
 				// WebSocket routes
 				group.Group("/ws", func(group *ghttp.RouterGroup) {
-					group.Middleware(middleware.Auth)
 					chatController := chat.NewController()
-					group.GET("/chat", chatController.Connect)
+					group.ALL("/chat", chatController.Connect)
 				})
 
 				// Static files

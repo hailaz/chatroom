@@ -20,7 +20,15 @@ func NewMessageDao() *MessageDao {
 
 // Create stores a new message in the database
 func (dao *MessageDao) Create(ctx context.Context, message *entity.Message) (uint, error) {
-	result, err := Model(ctx, MessageTable).Data(message).Insert()
+	// Create data map without ID field
+	data := g.Map{
+		"content":    message.Content,
+		"user_id":    message.UserId,
+		"room_id":    message.RoomId,
+		"created_at": message.CreatedAt,
+	}
+
+	result, err := Model(ctx, MessageTable).Data(data).Insert()
 	if err != nil {
 		return 0, err
 	}
