@@ -1,12 +1,12 @@
 package chat
 
 import (
+	"chatroom/api/chat"
+	"chatroom/internal/consts"
+	"chatroom/internal/dao"
+	"chatroom/internal/model/entity"
+	"chatroom/internal/service"
 	"context"
-	"goframechat/api/chat"
-	"goframechat/internal/consts"
-	"goframechat/internal/dao"
-	"goframechat/internal/model/entity"
-	"goframechat/internal/service"
 
 	"github.com/gogf/gf/v2/net/ghttp"
 )

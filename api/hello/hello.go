@@ -7,7 +7,7 @@ package hello
 import (
 	"context"
 	
-	"goframechat/api/hello/v1"
+	"chatroom/api/hello/v1"
 )
 
 type IHelloV1 interface {

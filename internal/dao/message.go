@@ -1,8 +1,8 @@
 package dao
 
 import (
+	"chatroom/internal/model/entity"
 	"context"
-	"goframechat/internal/model/entity"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"

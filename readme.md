@@ -14,7 +14,7 @@
 ### 2. 项目初始化
 - 使用 GoFrame CLI 创建项目
   ```
-  gf init goframechat
+  gf init chatroom
   ```
 - 项目目录结构说明
   - `api`: 对外接口定义

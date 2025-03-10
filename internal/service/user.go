@@ -1,11 +1,11 @@
 package service
 
 import (
+	"chatroom/api/user"
+	"chatroom/internal/consts"
+	"chatroom/internal/dao"
+	"chatroom/internal/model/entity"
 	"context"
-	"goframechat/api/user"
-	"goframechat/internal/consts"
-	"goframechat/internal/dao"
-	"goframechat/internal/model/entity"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 )

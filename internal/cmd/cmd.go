@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"chatroom/internal/controller/chat"
+	"chatroom/internal/controller/chatroom"
+	"chatroom/internal/controller/user"
+	"chatroom/internal/dao"
+	"chatroom/internal/middleware"
 	"context"
-	"goframechat/internal/controller/chat"
-	"goframechat/internal/controller/chatroom"
-	"goframechat/internal/controller/user"
-	"goframechat/internal/dao"
-	"goframechat/internal/middleware"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"

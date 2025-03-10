@@ -1,11 +1,11 @@
 package user
 
 import (
+	"chatroom/api/user"
+	"chatroom/internal/consts"
+	"chatroom/internal/model/entity"
+	"chatroom/internal/service"
 	"context"
-	"goframechat/api/user"
-	"goframechat/internal/consts"
-	"goframechat/internal/model/entity"
-	"goframechat/internal/service"
 )
 
 // Controller handles user-related HTTP requests

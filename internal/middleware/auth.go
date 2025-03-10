@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"chatroom/internal/consts"
+	"chatroom/internal/dao"
+	"chatroom/internal/service"
 	"context"
-	"goframechat/internal/consts"
-	"goframechat/internal/dao"
-	"goframechat/internal/service"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"

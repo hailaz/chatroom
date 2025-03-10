@@ -5,7 +5,7 @@ DOCKER_NAME = "template-single"
 
 include ./hack/hack.mk
 
-BINARY=goframechat
+BINARY=chatroom
 
 .PHONY: run
 run:
@@ -18,4 +18,4 @@ build:
 .PHONY: clean
 clean:
 	@rm -f $(BINARY)
-	@rm -f goframechat.db
+	@rm -f chat.db

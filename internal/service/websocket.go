@@ -1,12 +1,12 @@
 package service
 
 import (
+	"chatroom/internal/consts"
+	"chatroom/internal/dao"
+	"chatroom/internal/model/entity"
 	"context"
 	"encoding/json"
 	"fmt"
-	"goframechat/internal/consts"
-	"goframechat/internal/dao"
-	"goframechat/internal/model/entity"
 	"net/http"
 	"sync"
 	"time"

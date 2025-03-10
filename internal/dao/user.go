@@ -1,8 +1,8 @@
 package dao
 
 import (
+	"chatroom/internal/model/entity"
 	"context"
-	"goframechat/internal/model/entity"
 	"time"
 
 	"github.com/gogf/gf/v2/crypto/gmd5"

@@ -1,10 +1,10 @@
 package service
 
 import (
+	"chatroom/internal/consts"
+	"chatroom/internal/model/entity"
 	"context"
 	"fmt"
-	"goframechat/internal/consts"
-	"goframechat/internal/model/entity"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -25,7 +25,7 @@ type JwtClaims struct {
 
 // NewJwtService creates a new JwtService instance
 func NewJwtService() *JwtService {
-	secretKey := []byte(g.Cfg().MustGet(context.Background(), "jwt.secretKey", "goframechat_secret_key").String())
+	secretKey := []byte(g.Cfg().MustGet(context.Background(), "jwt.secretKey", "chatroom_secret_key").String())
 	return &JwtService{
 		secretKey: secretKey,
 	}

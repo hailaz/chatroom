@@ -5,7 +5,7 @@
 package hello
 
 import (
-	"goframechat/api/hello"
+	"chatroom/api/hello"
 )
 
 type ControllerV1 struct{}

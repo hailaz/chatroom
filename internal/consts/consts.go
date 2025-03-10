@@ -21,7 +21,7 @@ const (
 
 	// JWT related constants
 	JwtExpireTime = 86400 // JWT token expire time in seconds (24 hours)
-	JwtIssuer     = "GoFrameChat"
+	JwtIssuer     = "chatroom"
 
 	// Default values
 	DefaultAvatar = "/resource/image/avatar/default.png"

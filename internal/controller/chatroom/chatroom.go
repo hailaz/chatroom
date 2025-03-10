@@ -1,11 +1,11 @@
 package chatroom
 
 import (
+	"chatroom/api/chatroom"
+	"chatroom/internal/consts"
+	"chatroom/internal/model/entity"
+	"chatroom/internal/service"
 	"context"
-	"goframechat/api/chatroom"
-	"goframechat/internal/consts"
-	"goframechat/internal/model/entity"
-	"goframechat/internal/service"
 )
 
 // Controller handles chat room-related HTTP requests

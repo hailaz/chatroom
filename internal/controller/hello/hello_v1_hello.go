@@ -1,10 +1,10 @@
 package hello
 
 import (
+	v1 "chatroom/api/hello/v1"
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 
-	"goframechat/api/hello/v1"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func (c *ControllerV1) Hello(ctx context.Context, req *v1.HelloReq) (res *v1.HelloRes, err error) {
