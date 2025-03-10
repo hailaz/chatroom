@@ -172,26 +172,38 @@ func (m *WebSocketManager) broadcastUserList(roomId uint) {
 	if value, ok := m.connections.Load(roomId); ok {
 		roomConns := value.(*sync.Map)
 
-		// Build user list
-		users := make([]map[string]interface{}, 0)
-		roomConns.Range(func(key, value interface{}) bool {
-			conn := value.(*Connection)
-			users = append(users, map[string]interface{}{
-				"id":       conn.user.Id,
-				"username": conn.user.Username,
-				"nickname": conn.user.Nickname,
-				"avatar":   conn.user.Avatar,
-				"status":   consts.UserStatusOnline,
-			})
-			return true
-		})
+		// 获取房间的所有成员
+		roomDao := dao.NewChatRoomDao()
+		allUsers, err := roomDao.ListRoomUsers(context.Background(), roomId)
+		if err != nil {
+			g.Log().Error(context.Background(), "Failed to get room users:", err)
+			return
+		}
 
-		// Sort users by ID to maintain consistent order
+		// 构建用户列表，包含在线状态
+		users := make([]map[string]interface{}, 0)
+		for _, u := range allUsers {
+			// 检查用户是否在线
+			status := consts.UserStatusOffline
+			if _, ok := roomConns.Load(u.Id); ok {
+				status = consts.UserStatusOnline
+			}
+
+			users = append(users, map[string]interface{}{
+				"id":       u.Id,
+				"username": u.Username,
+				"nickname": u.Nickname,
+				"avatar":   u.Avatar,
+				"status":   status,
+			})
+		}
+
+		// 按 ID 排序保持顺序一致
 		sort.Slice(users, func(i, j int) bool {
 			return users[i]["id"].(uint) < users[j]["id"].(uint)
 		})
 
-		// Broadcast user list
+		// 广播用户列表
 		m.broadcastToRoom(roomId, WebSocketMessage{
 			Type:      consts.WsMsgTypeUserList,
 			Data:      users,
