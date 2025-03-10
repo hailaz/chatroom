@@ -107,20 +107,29 @@ class ChatUI {
     renderRoomActions(room) {
         if (!window.currentUser) return '';
         
+        let actions = '';
         if (room.creatorId === window.currentUser.id) {
-            return `
-                <div class="dropdown ms-2">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" onclick="event.stopPropagation()">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item text-danger" href="#" onclick="event.stopPropagation(); chat.deleteRoom(${room.id})">
-                            <i class="fas fa-trash"></i> 删除聊天室
-                        </a></li>
-                    </ul>
-                </div>`;
+            actions = `
+                <li><a class="dropdown-item text-danger" href="#" onclick="event.stopPropagation(); chat.deleteRoom(${room.id})">
+                    <i class="fas fa-trash"></i> 删除聊天室
+                </a></li>`;
         }
-        return '';
+        
+        // 添加离开房间选项
+        actions += `
+            <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); chat.leaveRoom(${room.id})">
+                <i class="fas fa-sign-out-alt"></i> 离开房间
+            </a></li>`;
+
+        return `
+            <div class="dropdown ms-2">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" onclick="event.stopPropagation()">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    ${actions}
+                </ul>
+            </div>`;
     }
 
     // 清空聊天区域

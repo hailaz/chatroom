@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -133,7 +134,7 @@ func (m *WebSocketManager) removeConnection(conn *Connection) {
 		// Update user status to offline
 		m.userDao.UpdateStatus(context.Background(), conn.user.Id, consts.UserStatusOffline)
 
-		// If room is empty, remove it
+		// If room is empty, remove it from connections map
 		empty := true
 		roomConns.Range(func(key, value interface{}) bool {
 			empty = false
@@ -141,10 +142,21 @@ func (m *WebSocketManager) removeConnection(conn *Connection) {
 		})
 		if empty {
 			m.connections.Delete(conn.roomId)
-		} else {
-			// Broadcast updated user list
-			m.broadcastUserList(conn.roomId)
 		}
+
+		// Broadcast user left message and updated user list
+		m.broadcastToRoom(conn.roomId, WebSocketMessage{
+			Type:      consts.WsMsgTypeLeave,
+			Content:   fmt.Sprintf("%s离开了聊天室", conn.user.Nickname),
+			Timestamp: time.Now().Format(time.RFC3339),
+			UserId:    conn.user.Id,
+			Username:  conn.user.Username,
+			Nickname:  conn.user.Nickname,
+			Avatar:    conn.user.Avatar,
+		})
+
+		// Broadcast updated user list
+		m.broadcastUserList(conn.roomId)
 	}
 }
 
@@ -183,6 +195,11 @@ func (m *WebSocketManager) broadcastUserList(roomId uint) {
 				"status":   consts.UserStatusOnline,
 			})
 			return true
+		})
+
+		// Sort users by ID to maintain consistent order
+		sort.Slice(users, func(i, j int) bool {
+			return users[i]["id"].(uint) < users[j]["id"].(uint)
 		})
 
 		// Broadcast user list

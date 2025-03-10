@@ -24,7 +24,7 @@
             <!-- 聊天室列表 -->
             <div class="col-md-2 room-list p-0">
                 <div class="p-3 bg-light border-bottom">
-                    <button class="btn btn-primary w-100" onclick="chatUI.showCreateRoomModal()">创建聊天室</button>
+                    <button class="btn btn-primary w-100" onclick="chat.ui.showCreateRoomModal()">创建聊天室</button>
                 </div>
                 <div id="roomList" class="list-group list-group-flush"></div>
             </div>
@@ -114,9 +114,9 @@
     </div>
 
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="/resource/js/ui.js"></script>
     <script src="/resource/js/api.js"></script>
     <script src="/resource/js/websocket.js"></script>
-    <script src="/resource/js/ui.js"></script>
     <script src="/resource/js/chat.js"></script>
 </body>
 </html>

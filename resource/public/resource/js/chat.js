@@ -82,8 +82,12 @@ class Chat {
 
     async joinRoom(roomId) {
         try {
-            await Api.joinRoom(roomId);
+            // 如果已在房间中，先离开当前房间
+            if (this.currentRoom) {
+                await this.leaveRoom(this.currentRoom, false);
+            }
             
+            await Api.joinRoom(roomId);
             this.currentRoom = roomId;
             this.ws.connect(roomId);
 
@@ -98,6 +102,28 @@ class Chat {
             this.loadRoomList();
         } catch (err) {
             console.error('加入聊天室失败:', err);
+            alert(err.message || '加入聊天室失败');
+        }
+    }
+
+    async leaveRoom(roomId, clearUI = true) {
+        if (!roomId) return;
+        
+        try {
+            await Api.leaveRoom(roomId);
+            
+            if (this.currentRoom === roomId) {
+                this.currentRoom = null;
+                this.ws.close();
+                if (clearUI) {
+                    this.ui.clearChatArea();
+                }
+            }
+            
+            await this.loadRoomList();
+        } catch (err) {
+            console.error('离开聊天室失败:', err);
+            alert(err.message || '离开聊天室失败');
         }
     }
 
@@ -196,11 +222,11 @@ class Chat {
     }
 }
 
-// 创建全局实例
-window.chat = new Chat();
-window.currentUser = null; // 初始为null，将在init()中设置
-
-// 初始化
+// 等待DOM和其他脚本加载完成后再初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 创建全局实例
+    window.chat = new Chat();
+    window.currentUser = null;
+    // 初始化
     chat.init();
 });

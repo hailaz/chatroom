@@ -62,6 +62,12 @@ class Api {
         });
     }
 
+    static async leaveRoom(roomId) {
+        return this.request(`/api/chatroom/leave/${roomId}`, {
+            method: 'POST'
+        });
+    }
+
     static async deleteRoom(roomId) {
         return this.request(`/api/chatroom/delete/${roomId}`, {
             method: 'POST'
