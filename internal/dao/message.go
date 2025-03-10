@@ -4,6 +4,7 @@ import (
 	"context"
 	"goframechat/internal/model/entity"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -22,10 +23,10 @@ func NewMessageDao() *MessageDao {
 func (dao *MessageDao) Create(ctx context.Context, message *entity.Message) (uint, error) {
 	// Create data map without ID field
 	data := g.Map{
-		"content":    message.Content,
-		"user_id":    message.UserId,
-		"room_id":    message.RoomId,
-		"created_at": message.CreatedAt,
+		"content": message.Content,
+		"user_id": message.UserId,
+		"room_id": message.RoomId,
+		"type":    message.Type,
 	}
 
 	result, err := Model(ctx, MessageTable).Data(data).Insert()
@@ -37,31 +38,22 @@ func (dao *MessageDao) Create(ctx context.Context, message *entity.Message) (uin
 }
 
 // GetRoomMessagesWithUser retrieves messages with user information for a room
-func (dao *MessageDao) GetRoomMessagesWithUser(ctx context.Context, roomId uint, page, size int) ([]g.Map, int, error) {
+func (dao *MessageDao) GetRoomMessagesWithUser(ctx context.Context, roomId uint, page, size int) (gdb.Result, int, error) {
 	model := Model(ctx, MessageTable).
 		As("m").
 		LeftJoin("users u", "u.id = m.user_id").
 		Where("m.room_id", roomId)
 
-	// Get total count
-	total, err := model.Count()
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Get messages with user information
-	var messages []g.Map
-	err = model.Fields(`
+	list, total, err := model.Fields(`
 		m.*,
 		u.username,
 		u.nickname,
 		u.avatar
 	`).
 		Order("m.created_at DESC").
-		Page(page, size).
-		Scan(&messages)
+		Page(page, size).AllAndCount(false)
 
-	return messages, total, err
+	return list, total, err
 }
 
 // GetUserMessages retrieves all messages sent by a user

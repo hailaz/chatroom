@@ -67,18 +67,14 @@ func (s *MessageService) GetHistory(ctx context.Context, userId uint, req *chat.
 	// Convert to response format
 	messageList := make([]chat.MessageRes, 0, len(messages))
 	for _, m := range messages {
-		messageList = append(messageList, chat.MessageRes{
-			Id:        gconv.Uint(m["id"]),
-			Type:      gconv.Int(m["type"]),
-			Content:   gconv.String(m["content"]),
-			RoomId:    gconv.Uint(m["room_id"]),
-			UserId:    gconv.Uint(m["user_id"]),
-			Username:  gconv.String(m["username"]),
-			Nickname:  gconv.String(m["nickname"]),
-			Avatar:    gconv.String(m["avatar"]),
-			Timestamp: gconv.Time(m["created_at"]).Format("2006-01-02 15:04:05"),
+		msg := chat.MessageRes{}
+		gconv.Struct(m, &msg, map[string]string{
+			"created_at": "timestamp",
 		})
+		messageList = append(messageList, msg)
 	}
+
+	// glog.Debug(ctx, "History Response: ", messageList)
 
 	return &chat.HistoryRes{
 		Messages: messageList,
