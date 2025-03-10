@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天室 - GoFrame Chat</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 56px);
+        }
+        .room-list {
+            height: 100%;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+        }
+        .chat-area {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .message-input {
+            border-top: 1px solid #dee2e6;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 1rem;
+        }
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .message .content {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            max-width: 70%;
+        }
+        .message.self {
+            flex-direction: row-reverse;
+        }
+        .message.self .content {
+            background: #007bff;
+            color: white;
+        }
+        .room-item {
+            cursor: pointer;
+        }
+        .room-item:hover {
+            background: #f8f9fa;
+        }
+        .room-item.active {
+            background: #007bff;
+            color: white;
+        }
+        .user-list {
+            height: 100%;
+            overflow-y: auto;
+            border-left: 1px solid #dee2e6;
+        }
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .user-item .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .user-item.online .status {
+            color: #28a745;
+        }
+        .user-item.offline .status {
+            color: #dc3545;
+        }
+        .message .image-content {
+            max-width: 300px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .message .file-content {
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 80vh;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">GoFrame Chat</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3" id="userInfo"></span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid chat-container">
+        <div class="row h-100">
+            <!-- 聊天室列表 -->
+            <div class="col-md-2 room-list p-0">
+                <div class="p-3 bg-light border-bottom">
+                    <button class="btn btn-primary w-100" onclick="showCreateRoomModal()">创建聊天室</button>
+                </div>
+                <div id="roomList" class="list-group list-group-flush"></div>
+            </div>
+
+            <!-- 聊天区域 -->
+            <div class="col-md-8 chat-area" id="chatArea">
+                <div class="message-list" id="messageList"></div>
+                <div class="message-input">
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <label class="dropdown-item" style="cursor: pointer;">
+                                    <i class="fas fa-image"></i> 发送图片
+                                    <input type="file" style="display: none;" id="imageInput" accept="image/*">
+                                </label>
+                            </li>
+                            <li>
+                                <label class="dropdown-item" style="cursor: pointer;">
+                                    <i class="fas fa-file"></i> 发送文件
+                                    <input type="file" style="display: none;" id="fileInput">
+                                </label>
+                            </li>
+                        </ul>
+                        <input type="text" class="form-control" id="messageInput" placeholder="输入消息...">
+                        <button class="btn btn-primary" onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 在线用户列表 -->
+            <div class="col-md-2 user-list p-0" id="userList">
+                <div class="p-3 bg-light border-bottom">
+                    <h6 class="mb-0">在线用户</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片预览模态框 -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">图片预览</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="imagePreview" src="" alt="预览图片">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建聊天室模态框 -->
+    <div class="modal fade" id="createRoomModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">创建聊天室</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRoomForm">
+                        <div class="mb-3">
+                            <label class="form-label">房间名称</label>
+                            <input type="text" class="form-control" id="roomName" required minlength="2" maxlength="50">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">房间描述</label>
+                            <textarea class="form-control" id="roomDescription" maxlength="200"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="roomPrivate">
+                            <label class="form-check-label">私密房间</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="createRoom()">创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let currentUser = null;
+        let currentRoom = null;
+        let ws = null;
+        const createRoomModal = new bootstrap.Modal(document.getElementById('createRoomModal'));
+        const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+
+        // 初始化
+        async function init() {
+            // 检查登录状态
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/html/login.html';
+                return;
+            }
+
+            // 获取用户信息
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            document.getElementById('userInfo').textContent = currentUser.nickname;
+
+            // 加载聊天室列表
+            await loadRoomList();
+        }
+
+        // 加载聊天室列表
+        async function loadRoomList() {
+            try {
+                const response = await fetch('/api/chatroom/list?page=1&size=50', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                const data = await response.json();
+                if (data.code === 0) {
+                    const roomList = document.getElementById('roomList');
+                    roomList.innerHTML = '';
+                    data.data.list.forEach(room => {
+                        const div = document.createElement('div');
+                        div.className = 'list-group-item room-item';
+                        div.onclick = () => joinRoom(room.id);
+                        div.innerHTML = `
+                            <h6 class="mb-1">${room.name}</h6>
+                            <p class="mb-1 small text-muted">${room.description || '无描述'}</p>
+                            <small>${room.userCount}人在线</small>
+                        `;
+                        roomList.appendChild(div);
+                    });
+                }
+            } catch (err) {
+                console.error('加载聊天室列表失败:', err);
+            }
+        }
+
+        // 创建聊天室
+        async function createRoom() {
+            const name = document.getElementById('roomName').value;
+            const description = document.getElementById('roomDescription').value;
+            const isPrivate = document.getElementById('roomPrivate').checked;
+
+            try {
+                const response = await fetch('/api/chatroom/create', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description, isPrivate })
+                });
+                const data = await response.json();
+                if (data.code === 0) {
+                    createRoomModal.hide();
+                    await loadRoomList();
+                    joinRoom(data.data.id);
+                } else {
+                    alert(data.message || '创建聊天室失败');
+                }
+            } catch (err) {
+                alert('创建聊天室失败: ' + err.message);
+            }
+        }
+
+        // 加入聊天室
+        async function joinRoom(roomId) {
+            try {
+                // 加入房间
+                const response = await fetch(`/api/chatroom/join/${roomId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                const data = await response.json();
+                if (data.code === 0) {
+                    // 关闭之前的连接
+                    if (ws) {
+                        ws.close();
+                    }
+
+                    // 建立WebSocket连接
+                    currentRoom = roomId;
+                    connectWebSocket(roomId);
+
+                    // 加载历史消息
+                    await loadHistory(roomId);
+
+                    // 更新UI
+                    document.querySelectorAll('.room-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.querySelector('h6').textContent === room.name) {
+                            item.classList.add('active');
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('加入聊天室失败:', err);
+            }
+        }
+
+        // 连接WebSocket
+        function connectWebSocket(roomId) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/chat?roomId=${roomId}`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onmessage = handleWebSocketMessage;
+
+            ws.onclose = function() {
+                console.log('WebSocket连接已关闭');
+                // 尝试重新连接
+                setTimeout(() => {
+                    if (currentRoom) {
+                        connectWebSocket(currentRoom);
+                    }
+                }, 3000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+            };
+        }
+
+        // 加载历史消息
+        async function loadHistory(roomId) {
+            try {
+                const response = await fetch(`/api/chat/history/${roomId}?page=1&size=50`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                const data = await response.json();
+                if (data.code === 0) {
+                    const messageList = document.getElementById('messageList');
+                    messageList.innerHTML = '';
+                    data.data.messages.reverse().forEach(msg => {
+                        appendMessage(msg);
+                    });
+                    messageList.scrollTop = messageList.scrollHeight;
+                }
+            } catch (err) {
+                console.error('加载历史消息失败:', err);
+            }
+        }
+
+        // 发送消息
+        function sendMessage() {
+            if (!ws || !currentRoom) return;
+
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const message = {
+                type: 0, // 文本消息
+                content: content,
+                roomId: currentRoom
+            };
+
+            ws.send(JSON.stringify(message));
+            input.value = '';
+        }
+
+        // 文件上传处理
+        document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        async function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const base64 = await readFileAsBase64(file);
+                const message = {
+                    type: 1, // 图片消息
+                    content: base64,
+                    roomId: currentRoom
+                };
+                ws.send(JSON.stringify(message));
+            } catch (err) {
+                console.error('图片上传失败:', err);
+                alert('图片上传失败');
+            }
+
+            e.target.value = ''; // 清除input
+        }
+
+        async function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const base64 = await readFileAsBase64(file);
+                const message = {
+                    type: 2, // 文件消息
+                    content: JSON.stringify({
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        data: base64
+                    }),
+                    roomId: currentRoom
+                };
+                ws.send(JSON.stringify(message));
+            } catch (err) {
+                console.error('文件上传失败:', err);
+                alert('文件上传失败');
+            }
+
+            e.target.value = ''; // 清除input
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 添加消息到界面
+        function appendMessage(message) {
+            const messageList = document.getElementById('messageList');
+            const div = document.createElement('div');
+            div.className = `message d-flex align-items-start ${message.userId === currentUser.id ? 'self' : ''}`;
+            
+            const timestamp = new Date(message.timestamp).toLocaleTimeString();
+            let content = '';
+
+            switch (message.type) {
+                case 0: // 文本消息
+                    content = `<div class="content">${escapeHtml(message.content)}</div>`;
+                    break;
+                case 1: // 图片消息
+                    content = `
+                        <div class="content p-0">
+                            <img src="${message.content}" class="image-content" onclick="showImagePreview('${message.content}')">
+                        </div>`;
+                    break;
+                case 2: // 文件消息
+                    const fileInfo = JSON.parse(message.content);
+                    content = `
+                        <div class="content file-content" onclick="downloadFile('${fileInfo.data}', '${fileInfo.name}')">
+                            <i class="fas fa-file me-2"></i>
+                            ${fileInfo.name}<br>
+                            <small class="text-muted">${formatFileSize(fileInfo.size)}</small>
+                        </div>`;
+                    break;
+                case 3: // 系统消息
+                    div.className = 'message text-center text-muted small py-2';
+                    content = message.content;
+                    break;
+            }
+            
+            if (message.type === 3) {
+                div.innerHTML = `${content}`;
+            } else {
+                div.innerHTML = `
+                    <img src="${message.avatar || '/resource/image/avatar/default.png'}" class="avatar me-2">
+                    <div>
+                        <div class="small text-muted mb-1">${message.nickname || message.username} - ${timestamp}</div>
+                        ${content}
+                    </div>
+                `;
+            }
+            
+            messageList.appendChild(div);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        // 更新用户列表
+        function updateUserList(users) {
+            const userList = document.getElementById('userList');
+            const listContent = document.querySelector('#userList .list-group');
+            
+            // 保留标题
+            const header = userList.querySelector('.bg-light');
+            userList.innerHTML = '';
+            userList.appendChild(header);
+
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-item d-flex align-items-center';
+                div.innerHTML = `
+                    <img src="${user.avatar || '/resource/image/avatar/default.png'}" class="avatar me-2">
+                    <div>
+                        <div>${user.nickname}</div>
+                        <small class="text-muted">${user.username}</small>
+                    </div>
+                    <i class="fas fa-circle status ms-auto ${user.status === 1 ? 'text-success' : 'text-secondary'}"></i>
+                `;
+                userList.appendChild(div);
+            });
+        }
+
+        // WebSocket消息处理
+        function handleWebSocketMessage(event) {
+            const message = JSON.parse(event.data);
+            
+            switch (message.type) {
+                case 4: // 用户列表更新
+                    updateUserList(message.data);
+                    break;
+                default:
+                    appendMessage(message);
+            }
+        }
+
+        // 辅助函数
+        function showImagePreview(src) {
+            document.getElementById('imagePreview').src = src;
+            imageModal.show();
+        }
+
+        function downloadFile(base64Data, fileName) {
+            const link = document.createElement('a');
+            link.href = base64Data;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function formatFileSize(bytes) {
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let size = bytes;
+            let unit = 0;
+            while (size >= 1024 && unit < units.length - 1) {
+                size /= 1024;
+                unit++;
+            }
+            return `${size.toFixed(2)} ${units[unit]}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 显示创建聊天室模态框
+        function showCreateRoomModal() {
+            document.getElementById('createRoomForm').reset();
+            createRoomModal.show();
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/html/login.html';
+        }
+
+        // 初始化页面
+        init();
+
+        // 绑定发送消息的回车事件
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
