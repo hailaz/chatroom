@@ -2,9 +2,11 @@ package service
 
 import (
 	"chatroom/api/chatroom"
+	"chatroom/internal/consts"
 	"chatroom/internal/dao"
 	"chatroom/internal/model/entity"
 	"context"
+	"time"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 )
@@ -128,6 +130,20 @@ func (s *ChatRoomService) Join(ctx context.Context, userId uint, req *chatroom.J
 		return nil, err
 	}
 
+	// Get user info for system message
+	user, err := dao.NewUserDao().GetByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Broadcast system message about new user
+	wsManager := GetWebSocketManager()
+	wsManager.broadcastToRoom(req.Id, WebSocketMessage{
+		Type:      consts.MessageTypeSystem,
+		Content:   user.Nickname + " 加入了聊天室",
+		Timestamp: time.Now().Format(time.RFC3339),
+	})
+
 	return &chatroom.JoinRes{Success: true}, nil
 }
 
@@ -151,11 +167,25 @@ func (s *ChatRoomService) Leave(ctx context.Context, userId uint, req *chatroom.
 		return &chatroom.LeaveRes{Success: true}, nil
 	}
 
+	// Get user info for system message before removing
+	user, err := dao.NewUserDao().GetByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
 	// Remove user from room
 	err = s.roomDao.RemoveUser(ctx, req.Id, userId)
 	if err != nil {
 		return nil, err
 	}
+
+	// Broadcast system message about user leaving
+	wsManager := GetWebSocketManager()
+	wsManager.broadcastToRoom(req.Id, WebSocketMessage{
+		Type:      consts.MessageTypeSystem,
+		Content:   user.Nickname + " 离开了聊天室",
+		Timestamp: time.Now().Format(time.RFC3339),
+	})
 
 	return &chatroom.LeaveRes{Success: true}, nil
 }
@@ -173,6 +203,14 @@ func (s *ChatRoomService) Delete(ctx context.Context, userId uint, req *chatroom
 	if room.CreatorId != userId {
 		return nil, gerror.New("Only the room creator can delete the room")
 	}
+
+	// Broadcast system message about room deletion
+	wsManager := GetWebSocketManager()
+	wsManager.broadcastToRoom(req.Id, WebSocketMessage{
+		Type:      consts.MessageTypeSystem,
+		Content:   "聊天室已被管理员删除",
+		Timestamp: time.Now().Format(time.RFC3339),
+	})
 
 	// Delete the room and all associated data
 	messageDao := dao.NewMessageDao()

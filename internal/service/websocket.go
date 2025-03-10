@@ -144,17 +144,6 @@ func (m *WebSocketManager) removeConnection(conn *Connection) {
 			m.connections.Delete(conn.roomId)
 		}
 
-		// Broadcast user left message and updated user list
-		m.broadcastToRoom(conn.roomId, WebSocketMessage{
-			Type:      consts.WsMsgTypeLeave,
-			Content:   fmt.Sprintf("%s离开了聊天室", conn.user.Nickname),
-			Timestamp: time.Now().Format(time.RFC3339),
-			UserId:    conn.user.Id,
-			Username:  conn.user.Username,
-			Nickname:  conn.user.Nickname,
-			Avatar:    conn.user.Avatar,
-		})
-
 		// Broadcast updated user list
 		m.broadcastUserList(conn.roomId)
 	}
