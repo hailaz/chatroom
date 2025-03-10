@@ -16,6 +16,5 @@ manifest/output/
 temp/
 temp.yaml
 bin
-**/config/config.yaml
-goframechat.db
+chat.db
 main.exe~

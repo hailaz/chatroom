@@ -53,6 +53,8 @@
         }
         .room-item {
             cursor: pointer;
+            position: relative;
+            padding: 15px;
         }
         .room-item:hover {
             background: #f8f9fa;
@@ -60,6 +62,38 @@
         .room-item.active {
             background: #007bff;
             color: white;
+        }
+        .room-item .room-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .room-item .room-title {
+            margin: 0;
+            padding-right: 10px;
+            flex-grow: 1;
+        }
+        .room-item .room-actions {
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        .room-item .online-count {
+            display: inline-flex;
+            align-items: center;
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .room-item.active .online-count {
+            background: white;
+            color: #007bff;
+        }
+        .room-item .online-count i {
+            margin-right: 4px;
         }
         .user-list {
             height: 100%;
@@ -244,13 +278,21 @@
                     roomList.innerHTML = '';
                     data.data.list.forEach(room => {
                         const div = document.createElement('div');
-                        div.className = 'list-group-item room-item';
+                        div.className = `list-group-item room-item ${currentRoom === room.id ? 'active' : ''}`;
                         div.onclick = () => joinRoom(room.id);
                         div.innerHTML = `
-                            ${showRoomActions(room)}
-                            <h6 class="mb-1">${room.name}</h6>
-                            <p class="mb-1 small text-muted">${room.description || '无描述'}</p>
-                            <small>${room.userCount}人在线</small>
+                            <div class="room-header">
+                                <h6 class="room-title">${room.name}</h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="online-count">
+                                        <i class="fas fa-users"></i>${room.userCount}
+                                    </span>
+                                    <div class="room-actions">
+                                        ${showRoomActions(room)}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mb-0 small ${currentRoom === room.id ? 'text-white-50' : 'text-muted'}">${room.description || '无描述'}</p>
                         `;
                         roomList.appendChild(div);
                     });
@@ -595,6 +637,7 @@
             switch (message.type) {
                 case 4: // 用户列表更新
                     updateUserList(message.data);
+                    loadRoomList(); // 刷新聊天室列表以更新在线人数
                     break;
                 default:
                     appendMessage(message);
@@ -649,12 +692,12 @@
         function showRoomActions(room) {
             if (room.creatorId === currentUser.id) {
                 return `
-                    <div class="dropdown float-end">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <div class="dropdown ms-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" onclick="event.stopPropagation()">
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteRoom(${room.id})">
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="event.stopPropagation(); deleteRoom(${room.id})">
                                 <i class="fas fa-trash"></i> 删除聊天室
                             </a></li>
                         </ul>
