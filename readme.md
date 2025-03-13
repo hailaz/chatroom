@@ -1,5 +1,7 @@
 # GoFrame 聊天室
 
+**实验性的，用copilot生成的代码，bug较多。**
+
 基于 GoFrame 框架开发的 WebSocket 聊天室应用。
 
 ## 功能特点
