@@ -1,6 +1,6 @@
 # GoFrame 聊天室
 
-**实验性的，用copilot生成的代码，bug较多。**
+**实验性的，用 Copilot 生成的代码，bug 较多。**
 
 基于 GoFrame 框架开发的 WebSocket 聊天室应用。
 
@@ -77,17 +77,17 @@ go build -o main.exe
 
 ```
 .
-├── api           # API 接口定义
-├── internal      # 内部逻辑实现
-│   ├── cmd      # 启动入口
-│   ├── consts   # 常量定义
-│   ├── controller# 控制器
-│   ├── dao      # 数据访问
-│   ├── model    # 数据模型
-│   └── service  # 业务逻辑
-├── manifest     # 配置文件
-└── resource     # 静态资源
-    └── public   # Web 前端文件
+├── api            # API 接口定义
+├── internal       # 内部逻辑实现
+│   ├── cmd        # 启动入口
+│   ├── consts     # 常量定义
+│   ├── controller # 控制器
+│   ├── dao        # 数据访问
+│   ├── model      # 数据模型
+│   └── service    # 业务逻辑
+├── manifest       # 配置文件
+└── resource       # 静态资源
+    └── public     # Web 前端文件
 ```
 
 ## 技术栈
